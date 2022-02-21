@@ -45,17 +45,23 @@ while current_date >= start_date:
             conn = sqlite3.connect(db_file)
             c = conn.cursor()
             # Update by country:
-            c.execute('SELECT * FROM %s WHERE date=?' % i, (current_date,))
+            # c.execute('SELECT * FROM %s WHERE date=?' % i, (current_date,))
+            # Update in all_in_one
+            print("checking in db")
+            c.execute('SELECT * FROM all_in_one WHERE date=? AND code=?', (current_date, i))
             result = c.fetchone()
             if result is None:
-                print(f"{current_date} not found in {i}")
+                print(f"{current_date} not found for {i}")
                 data = make_request(i, current_date)
                 if data == 1:
                     print("No data")
                 else:
+                    # c.execute(
+                    #     'INSERT INTO %s(date,confirmed,deaths,stringency_actual,stringency) VALUES (?,?,?,?,?)' % i,
+                    #     (data["date_value"], data["confirmed"], data["deaths"], data["stringency_actual"], data["stringency"]))
                     c.execute(
-                        'INSERT INTO %s(date,confirmed,deaths,stringency_actual,stringency) VALUES (?,?,?,?,?)' % i,
-                        (data["date_value"], data["confirmed"], data["deaths"], data["stringency_actual"], data["stringency"]))
+                     'INSERT INTO all_in_one(date,code,confirmed,deaths,stringency_actual,stringency) VALUES (?,?,?,?,?,?)',
+                     (data["date_value"], i, data["confirmed"], data["deaths"], data["stringency_actual"], data["stringency"]))
             else:
                 print(f"{current_date} already in db for {i}")
             conn.commit()

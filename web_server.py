@@ -1,7 +1,8 @@
 from flask import Flask, render_template, session, redirect
 from flask_wtf import FlaskForm
-from wtforms import DateField
-from wtforms.validators import DataRequired
+from wtforms.fields import DateField
+
+from wtforms.validators import DataRequired, ValidationError
 from wtforms import validators, SubmitField
 
 from datetime import date, datetime
@@ -27,6 +28,12 @@ class DateForm(FlaskForm):
     dt = DateField('Pick a Date', format='%Y-%m-%d', default=last_date, validators=(validators.DataRequired(),))
     submit = SubmitField('Submit')
 
+    def validate_dt(form, field):
+        if field.data > last_date:
+            raise ValidationError("There is no data for this date")
+        if field.data < datetime.strptime("2022-01-01", "%Y-%m-%d").date():
+            raise ValidationError("There is no data for this date")
+
 
 @app.route('/', methods=['post', 'get'])
 def home():
@@ -35,7 +42,7 @@ def home():
     if form.validate_on_submit():
         session['date'] = str(form.dt.data)
         requested_date = str(form.dt.data)
-        #return redirect('show_all')
+        # return redirect('show_all')
         conn = sqlite3.connect(db_file)
         c = conn.cursor()
         c.execute('SELECT * FROM all_in_one WHERE date=? ORDER BY deaths', (requested_date,))
@@ -47,7 +54,7 @@ def home():
 
         conn = sqlite3.connect(db_file)
         c = conn.cursor()
-       # c.execute('SELECT * FROM all_in_one WHERE date=? ORDER BY deaths', (last_date_str,))
+        # c.execute('SELECT * FROM all_in_one WHERE date=? ORDER BY deaths', (last_date_str,))
         c.execute('SELECT * FROM all_in_one WHERE date=? ORDER BY deaths', (requested_date,))
         data = c.fetchall()
         conn.close()
@@ -56,25 +63,25 @@ def home():
         print(e)
 
 
-@app.route('/show_all')
-def show_all():
-    try:
-        if session['date'] is not None:
-            print('333')
-        print('11')
-        request_date = session['date']
-        print(request_date)
-        print('111')
-        print(type(request_date))
-
-        conn = sqlite3.connect(db_file)
-        c = conn.cursor()
-        c.execute('SELECT * FROM all_in_one WHERE date=? ORDER BY deaths', (session['date'],))
-        data = c.fetchall()
-        conn.close()
-        return render_template('all_in_one.html', data=data)
-    except Exception as e:
-        print(e)
+# @app.route('/show_all')
+# def show_all():
+#     try:
+#         if session['date'] is not None:
+#             print('333')
+#         print('11')
+#         request_date = session['date']
+#         print(request_date)
+#         print('111')
+#         print(type(request_date))
+#
+#         conn = sqlite3.connect(db_file)
+#         c = conn.cursor()
+#         c.execute('SELECT * FROM all_in_one WHERE date=? ORDER BY deaths', (session['date'],))
+#         data = c.fetchall()
+#         conn.close()
+#         return render_template('all_in_one.html', data=data)
+#     except Exception as e:
+#         print(e)
 
 
 # @app.route('/show_all')
