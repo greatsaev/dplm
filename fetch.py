@@ -44,6 +44,7 @@ while current_date >= start_date:
         try:
             conn = sqlite3.connect(db_file)
             c = conn.cursor()
+            # Update by country:
             c.execute('SELECT * FROM %s WHERE date=?' % i, (current_date,))
             result = c.fetchone()
             if result is None:
